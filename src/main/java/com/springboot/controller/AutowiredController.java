@@ -1,12 +1,7 @@
 package com.springboot.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.springboot.service.Dog;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
-
-import com.springboot.service.Animal;
 
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -52,31 +47,28 @@ public class AutowiredController {
 		return new ApplyOfferResponse(cartVal);
 	}
 
-	private SegmentResponse getSegmentResponse(int userid)
+	private SegmentResponse getSegmentResponse(int userid) throws Exception
 	{
-		SegmentResponse segmentResponse = new SegmentResponse();
-		try {
-			String urlString = "http://localhost:1080/api/v1/user_segment?" + "user_id=" + userid;
-			URL url = new URL(urlString);
-			HttpURLConnection con = (HttpURLConnection) url.openConnection();
-			con.setRequestMethod("GET");
-			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+		String urlString = "http://localhost:1080/api/v1/user_segment?" + "user_id=" + userid;
+		URL url = new URL(urlString);
+		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+		connection.setRequestMethod("GET");
+		connection.setRequestProperty("accept", "application/json");
 
-
-			connection.setRequestProperty("accept", "application/json");
-
-			// This line makes the request
-			InputStream responseStream = connection.getInputStream();
-
-			// Manually converting the response body InputStream to APOD using Jackson
-			ObjectMapper mapper = new ObjectMapper();
-			 segmentResponse = mapper.readValue(responseStream,SegmentResponse.class);
-			System.out.println("got segment response" + segmentResponse);
-
-
-		} catch (Exception e) {
-			System.out.println(e);
+		// Check the response code
+		int responseCode = connection.getResponseCode();
+		System.out.println("Segment API Response Code: " + responseCode);
+		
+		if (responseCode != HttpURLConnection.HTTP_OK) {
+			throw new RuntimeException("Segment API returned error code: " + responseCode);
 		}
+
+		InputStream responseStream = connection.getInputStream();
+
+		ObjectMapper mapper = new ObjectMapper();
+		SegmentResponse segmentResponse = mapper.readValue(responseStream, SegmentResponse.class);
+		System.out.println("got segment response" + segmentResponse);
+		
 		return segmentResponse;
 	}
 
